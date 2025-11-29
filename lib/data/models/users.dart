@@ -1,1 +1,0 @@
-// entidade usuário no banco
