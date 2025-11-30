@@ -24,10 +24,8 @@ class _ProfilePageState extends State<ProfilePage> {
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    // Pega o usuário enviado via argumentos
     _user = ModalRoute.of(context)!.settings.arguments as Usuario;
 
-    // Preenche os campos com os dados atuais
     _nameController.text = _user.name;
     _emailController.text = _user.email;
   }
@@ -46,12 +44,10 @@ class _ProfilePageState extends State<ProfilePage> {
 
     String hashedPassword = _user.password;
 
-    // Só altera se o usuário digitou uma nova senha
     if (newPassword.isNotEmpty) {
       hashedPassword = BCrypt.hashpw(newPassword, BCrypt.gensalt());
     }
 
-    // Cria o usuário atualizado
     Usuario updatedUser = Usuario(
       id: _user.id,
       name: newName,
@@ -59,14 +55,12 @@ class _ProfilePageState extends State<ProfilePage> {
       password: hashedPassword,
     );
 
-    // Atualiza no banco
     await _usersRepo.updateUser(updatedUser);
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Perfil atualizado com sucesso!')),
     );
 
-    // Volta para a Home com o usuário atualizado
     Navigator.pushReplacementNamed(context, '/home', arguments: updatedUser);
   }
 
@@ -93,7 +87,6 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
                 const SizedBox(height: 20),
 
-                // Nome
                 SizedBox(
                   width: 450,
                   child: TextField(
@@ -111,7 +104,6 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
                 const SizedBox(height: 12),
 
-                // Email
                 SizedBox(
                   width: 450,
                   child: TextField(
@@ -129,7 +121,6 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
                 const SizedBox(height: 12),
 
-                // Nova senha
                 SizedBox(
                   width: 450,
                   child: TextField(
@@ -159,7 +150,6 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
                 const SizedBox(height: 25),
 
-                // Botão salvar
                 SizedBox(
                   width: 450,
                   child: ElevatedButton(

@@ -5,21 +5,15 @@ import '../models/users.dart';
 class UsersRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper();
 
-  // =====================
-  // CREATE - Inserir usuário
-  // =====================
   Future<int> createUser(Usuario user) async {
     final db = await _dbHelper.db;
     return await db.insert(
       'usuarios',
       user.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.replace, // substitui se email já existir
+      conflictAlgorithm: ConflictAlgorithm.replace, 
     );
   }
 
-  // =====================
-  // READ - Listar todos os usuários
-  // =====================
   Future<List<Usuario>> getAllUsers() async {
     final db = await _dbHelper.db;
     final maps = await db.query('usuarios');
@@ -29,9 +23,6 @@ class UsersRepository {
     });
   }
 
-  // =====================
-  // READ - Buscar usuário por ID
-  // =====================
   Future<Usuario?> getUserById(int id) async {
     final db = await _dbHelper.db;
     final maps = await db.query(
@@ -50,7 +41,6 @@ class UsersRepository {
   Future<Usuario?> getUserByEmail(String email) async {
     final db = await _dbHelper.db;
 
-    // Busca o usuário apenas pelo email
     final maps = await db.query(
       'usuarios',
       where: 'email = ?',
@@ -60,13 +50,10 @@ class UsersRepository {
     if (maps.isNotEmpty) {
       return Usuario.fromMap(maps.first);
     } else {
-      return null; // Se não encontrar o usuário, retorna null
+      return null;
     }
   }
 
-  // =====================
-  // UPDATE - Atualizar usuário
-  // =====================
   Future<int> updateUser(Usuario user) async {
     final db = await _dbHelper.db;
     return await db.update(
@@ -77,9 +64,6 @@ class UsersRepository {
     );
   }
 
-  // =====================
-  // DELETE - Deletar usuário
-  // =====================
   Future<int> deleteUser(int id) async {
     final db = await _dbHelper.db;
     return await db.delete(

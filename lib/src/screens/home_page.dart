@@ -211,10 +211,9 @@ class _HomePageState extends State<HomePage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Aqui, pegamos o usuário que foi passado na navegação
     final user = ModalRoute.of(context)?.settings.arguments as Usuario?;
     if (user != null) {
-      currentUser = user;  // Armazena o usuário logado
+      currentUser = user;
       loadUserTasks();
     }
   }
@@ -252,8 +251,8 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
         iconTheme: const IconThemeData(
-          color: Colors.white,   // coloque a cor que quiser
-          size: 28,              // opcional: mudar tamanho
+          color: Colors.white,   
+          size: 28,              
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -312,7 +311,7 @@ class _HomePageState extends State<HomePage> {
             Navigator.pushNamed(
               context,
               '/profile',
-              arguments: currentUser, // usuário logado
+              arguments: currentUser,
             );
           }),
           _navItem(Icons.settings, 'Configurações', () {}),
@@ -323,7 +322,7 @@ class _HomePageState extends State<HomePage> {
             );
           }),
 
-          const Spacer(), // empurra o "Sair" para o final
+          const Spacer(),
 
           const Divider(color: Colors.white24),
 
@@ -682,7 +681,6 @@ class AboutAppDialog extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Ícone
             const Icon(
               Icons.info_outline,
               color: Color(0xFFBA68C8),
@@ -690,7 +688,6 @@ class AboutAppDialog extends StatelessWidget {
             ),
             const SizedBox(height: 20),
 
-            // Título
             const Text(
               "Sobre o App",
               style: TextStyle(
@@ -701,7 +698,6 @@ class AboutAppDialog extends StatelessWidget {
             ),
             const SizedBox(height: 16),
 
-            // Texto principal
             const Text(
               "Este aplicativo foi desenvolvido para gerenciamento de tarefas "
               "com foco em simplicidade, segurança e desempenho. "
@@ -716,7 +712,6 @@ class AboutAppDialog extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            // Créditos
             const Text(
               "Desenvolvido por: Guilherme, Juliana, Vinicíus e Lucas",
               style: TextStyle(
@@ -736,7 +731,6 @@ class AboutAppDialog extends StatelessWidget {
 
             const SizedBox(height: 30),
 
-            // Botão fechar
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(

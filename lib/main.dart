@@ -18,8 +18,6 @@ void main() async {
   final dbHelper = DatabaseHelper();
   final db = await dbHelper.db;
 
-  // final repo = UsersRepository();
-
   await dbHelper.printDatabaseContent();
 
   runApp(const MyApp());

@@ -31,7 +31,6 @@ class _SignupPageState extends State<SignupPage> {
       return;
     }
 
-    // Criar usuário no banco
     final user = Usuario(name: name, email: email, password: hashedPassword);
     await _usersRepo.createUser(user);
 
@@ -39,7 +38,6 @@ class _SignupPageState extends State<SignupPage> {
       const SnackBar(content: Text('Conta criada com sucesso!')),
     );
 
-    // Redirecionar para a página de login
     Navigator.pushReplacementNamed(context, '/login');
   }
 

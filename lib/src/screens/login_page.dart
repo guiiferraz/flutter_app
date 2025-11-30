@@ -29,10 +29,8 @@ class _LoginPageState extends State<LoginPage> {
     final user = await repo.getUserByEmail(email);
 
     if (user != null && BCrypt.checkpw(password, user.password)) {
-      // Login válido, redireciona para home
       Navigator.pushReplacementNamed(context, '/home', arguments: user);
     } else {
-      // Usuário ou senha incorretos
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('E-mail ou senha inválidos')),
       );
