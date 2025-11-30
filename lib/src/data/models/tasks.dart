@@ -3,7 +3,7 @@ class Tarefa {
   final String name;
   final String description;
   final String date;
-  final int statusId;
+  final String status;
   final int usuarioId;
 
   Tarefa({
@@ -11,7 +11,7 @@ class Tarefa {
     required this.name,
     required this.description,
     required this.date,
-    required this.statusId,
+    required this.status,
     required this.usuarioId,
   });
 
@@ -21,7 +21,7 @@ class Tarefa {
       'name': name,
       'description': description,
       'date': date,
-      'status_id': statusId,
+      'status': status,
       'usuario_id': usuarioId,
     };
   }
@@ -32,7 +32,7 @@ class Tarefa {
       name: map['name'],
       description: map['description'],
       date: map['date'],
-      statusId: map['status_id'],
+      status: map['status'],
       usuarioId: map['usuario_id'],
     );
   }

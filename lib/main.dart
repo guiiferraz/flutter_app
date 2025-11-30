@@ -1,19 +1,26 @@
 import 'package:flutter/material.dart';
-import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
-import 'package:sqflite/sqflite.dart';
 
 import 'src/screens/login_page.dart';
+import 'src/screens/signup_page.dart';
 import 'src/screens/home_page.dart';
+import 'src/screens/profile_page.dart';
+
 import 'src/data/database_helper.dart';
+import 'src/data/repositories/users_repository.dart';
+import 'src/data/models/users.dart';
+
+import 'package:sqflite/sqflite.dart';
+import 'package:path/path.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Necessário para o SQLite funcionar no Flutter Web
-  databaseFactory = databaseFactoryFfiWeb;
+  final dbHelper = DatabaseHelper();
+  final db = await dbHelper.db;
 
-  // Inicializa o banco
-  final db = await DatabaseHelper().db;
+  // final repo = UsersRepository();
+
+  await dbHelper.printDatabaseContent();
 
   runApp(const MyApp());
 }
@@ -26,13 +33,13 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'To-Do List',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
+      theme: ThemeData(primarySwatch: Colors.blue),
       initialRoute: '/login',
       routes: {
         '/login': (context) => const LoginPage(),
+        '/signup': (context) => const SignupPage(),
         '/home': (context) => const HomePage(),
+        '/profile': (context) => const ProfilePage(),
       },
     );
   }

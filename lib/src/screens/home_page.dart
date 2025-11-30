@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import '../data/models/users.dart';
+import '../data/repositories/tasks_repository.dart';
+import '../data/models/tasks.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -9,8 +12,27 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   List<Map<String, dynamic>> tasks = [];
+  late Usuario currentUser;
 
   final TextEditingController _taskController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
+
+  final TasksRepository tasksRepository = TasksRepository();
+
+  Future<void> loadUserTasks() async {
+    final userTasks = await tasksRepository.getTasksByUserId(currentUser.id!);
+
+    setState(() {
+      tasks = userTasks.map((t) => {
+        "id": t.id,
+        "title": t.name,
+        "description": t.description,
+        "status": t.status,
+        "date": t.date,
+        "deleted": false,
+      }).toList();
+    });
+  }
 
   void _toggleTaskDeleted(Map<String, dynamic> task) {
     setState(() {
@@ -55,6 +77,26 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
                 style: const TextStyle(color: Colors.white),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _descriptionController,
+                decoration: InputDecoration(
+                  hintText: "Descrição (opcional)",
+                  hintStyle: TextStyle(color: Colors.grey[600]),
+                  filled: true,
+                  fillColor: const Color(0xFF2A2A2A),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFB388FF), width: 2),
+                  ),
+                ),
+                style: const TextStyle(color: Colors.white),
+                maxLines: 2,
               ),
               const SizedBox(height: 16),
               InkWell(
@@ -119,18 +161,32 @@ class _HomePageState extends State<HomePage> {
               child: const Text("Cancelar"),
             ),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 if (_taskController.text.isNotEmpty) {
+
+                  final newTask = Tarefa(
+                    name: _taskController.text,
+                    description: _descriptionController.text,
+                    date: selectedDate.isNotEmpty ? selectedDate : "",
+                    status: "pending",
+                    usuarioId: currentUser.id!,
+                  );
+
+                  final newTaskId = await tasksRepository.createTask(newTask);
+
                   setState(() {
                     tasks.add({
+                      "id": newTaskId,
                       "title": _taskController.text,
+                      "description": _descriptionController.text,
                       "status": "pending",
                       "deleted": false,
-                      "date": selectedDate.isNotEmpty ? selectedDate : null,
+                      "date": selectedDate.isNotEmpty ? selectedDate : "",
                     });
                   });
                   Navigator.pop(dialogContext);
                   _taskController.clear();
+                  _descriptionController.clear();
                 }
               },
               style: ElevatedButton.styleFrom(
@@ -150,6 +206,17 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
     );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Aqui, pegamos o usuário que foi passado na navegação
+    final user = ModalRoute.of(context)?.settings.arguments as Usuario?;
+    if (user != null) {
+      currentUser = user;  // Armazena o usuário logado
+      loadUserTasks();
+    }
   }
 
   @override
@@ -207,21 +274,21 @@ class _HomePageState extends State<HomePage> {
         children: [
           _buildSection(
             "Pendentes",
-            pendingTasks,
+            tasks.where((task) => task["status"] == "pending").toList(),
             const Color(0xFFE1BEE7),
             Icons.schedule_rounded,
           ),
           const SizedBox(height: 20),
           _buildSection(
             "Em Progresso",
-            inProgressTasks,
+            tasks.where((task) => task["status"] == "in_progress").toList(),
             const Color(0xFFBA68C8),
             Icons.autorenew_rounded,
           ),
           const SizedBox(height: 20),
           _buildSection(
             "Finalizadas",
-            doneTasks,
+            tasks.where((task) => task["status"] == "done").toList(),
             const Color(0xFF7B1FA2),
             Icons.check_circle_rounded,
           ),
@@ -241,9 +308,20 @@ class _HomePageState extends State<HomePage> {
 
           const SizedBox(height: 10),
 
-          _navItem(Icons.person, 'Perfil do Usuário', () {}),
+          _navItem(Icons.person, 'Perfil do Usuário', () {
+            Navigator.pushNamed(
+              context,
+              '/profile',
+              arguments: currentUser, // usuário logado
+            );
+          }),
           _navItem(Icons.settings, 'Configurações', () {}),
-          _navItem(Icons.info_outline, 'Sobre o App', () {}),
+          _navItem(Icons.info_outline, 'Sobre o App', () {
+            showDialog(
+              context: context,
+              builder: (_) => const AboutAppDialog(),
+            );
+          }),
 
           const Spacer(), // empurra o "Sair" para o final
 
@@ -258,6 +336,10 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildUserHeader() {
+    if (currentUser == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: const BoxDecoration(
@@ -273,19 +355,19 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(width: 16),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
+            children: [
               Text(
-                "Usuário",
-                style: TextStyle(
+                currentUser.name,
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                "email@exemplo.com",
-                style: TextStyle(
+                currentUser.email,
+                style: const TextStyle(
                   color: Colors.white70,
                   fontSize: 14,
                 ),
@@ -326,7 +408,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildSection(
-      String title, List tasks, Color color, IconData icon) {
+    String title, List tasks, Color color, IconData icon) {
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFF1E1E1E),
@@ -365,8 +447,7 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const Spacer(),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: color.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(20),
@@ -409,6 +490,7 @@ class _HomePageState extends State<HomePage> {
                 : Column(
                     children: tasks.map((task) {
                       return Container(
+                        key: ValueKey(task["id"]),
                         margin: const EdgeInsets.only(bottom: 12),
                         decoration: BoxDecoration(
                           color: const Color(0xFF2A2A2A),
@@ -444,8 +526,22 @@ class _HomePageState extends State<HomePage> {
                               decorationThickness: 2,
                             ),
                           ),
-                          subtitle: task["date"] != null
-                              ? Padding(
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (task["description"] != null && task["description"]!.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 4),
+                                  child: Text(
+                                    task["description"],
+                                    style: TextStyle(
+                                      color: Colors.grey[400],
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                              if (task["date"] != null && task["date"]!.isNotEmpty)
+                                Padding(
                                   padding: const EdgeInsets.only(top: 4),
                                   child: Row(
                                     children: [
@@ -464,8 +560,9 @@ class _HomePageState extends State<HomePage> {
                                       ),
                                     ],
                                   ),
-                                )
-                              : null,
+                                ),
+                            ],
+                          ),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -478,7 +575,13 @@ class _HomePageState extends State<HomePage> {
                                       ? Colors.greenAccent
                                       : Colors.redAccent,
                                 ),
-                                onPressed: () => _toggleTaskDeleted(task),
+                                onPressed: () async {
+                                  final taskId = task["id"];
+                                  if (taskId != null) {
+                                    await tasksRepository.deleteTask(taskId);
+                                    await loadUserTasks();
+                                  }
+                                },
                               ),
                               PopupMenuButton<String>(
                                 icon: const Icon(
@@ -489,10 +592,21 @@ class _HomePageState extends State<HomePage> {
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                onSelected: (value) {
+                                onSelected: (value) async {
                                   setState(() {
                                     task["status"] = value;
                                   });
+
+                                  final updatedTask = Tarefa(
+                                    id: task["id"],
+                                    name: task["title"],
+                                    description: task["description"] ?? "",
+                                    date: task["date"] ?? "",
+                                    status: task["status"],
+                                    usuarioId: currentUser.id!,
+                                  );
+
+                                  await tasksRepository.updateTask(updatedTask);
                                 },
                                 itemBuilder: (_) => [
                                   const PopupMenuItem(
@@ -545,6 +659,102 @@ class _HomePageState extends State<HomePage> {
                       );
                     }).toList(),
                   ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class AboutAppDialog extends StatelessWidget {
+  const AboutAppDialog({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.black.withOpacity(0.85),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        width: 400,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Ícone
+            const Icon(
+              Icons.info_outline,
+              color: Color(0xFFBA68C8),
+              size: 70,
+            ),
+            const SizedBox(height: 20),
+
+            // Título
+            const Text(
+              "Sobre o App",
+              style: TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Texto principal
+            const Text(
+              "Este aplicativo foi desenvolvido para gerenciamento de tarefas "
+              "com foco em simplicidade, segurança e desempenho. "
+              "Conta com autenticação, SQLite local e interface moderna.",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey,
+                height: 1.4,
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            // Créditos
+            const Text(
+              "Desenvolvido por: Guilherme, Juliana, Vinicíus e Lucas",
+              style: TextStyle(
+                fontSize: 15,
+                color: Colors.white70,
+              ),
+            ),
+            const SizedBox(height: 4),
+
+            const Text(
+              "Versão 1.0.0",
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey,
+              ),
+            ),
+
+            const SizedBox(height: 30),
+
+            // Botão fechar
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.purple[300],
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  "Fechar",
+                  style: TextStyle(fontSize: 16),
+                ),
+              ),
+            ),
           ],
         ),
       ),

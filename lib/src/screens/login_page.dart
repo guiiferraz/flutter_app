@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../data/repositories/users_repository.dart';
+import 'package:bcrypt/bcrypt.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -12,17 +14,27 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
 
+  void _login() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
 
-  void _login() {
-    final email = _emailController.text;
-    final password = _passwordController.text;
-
-    // aqui no futuro você pode validar ou autenticar o login
-    if (email.isNotEmpty && password.isNotEmpty) {
-      Navigator.pushReplacementNamed(context, '/home');
-    } else {
+    if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Preencha todos os campos')),
+      );
+      return;
+    }
+
+    final repo = UsersRepository();
+    final user = await repo.getUserByEmail(email);
+
+    if (user != null && BCrypt.checkpw(password, user.password)) {
+      // Login válido, redireciona para home
+      Navigator.pushReplacementNamed(context, '/home', arguments: user);
+    } else {
+      // Usuário ou senha incorretos
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('E-mail ou senha inválidos')),
       );
     }
   }
@@ -126,7 +138,9 @@ class _LoginPageState extends State<LoginPage> {
                                 ),
                             ),
                             ElevatedButton(
-                                onPressed: _login,
+                                onPressed: () {
+                                  Navigator.pushReplacementNamed(context, '/signup');
+                                },
                                     style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.grey.withOpacity(0.4),
                                     foregroundColor: Colors.white,
